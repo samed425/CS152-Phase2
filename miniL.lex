@@ -7,7 +7,7 @@
 %}
 DIGIT    [0-9]
 ALPHA	 [a-zA-Z]
-SYMBOL	 [!, @, #, $, %, ^, &, *, (, ), -, _, =, +, ,, ., /, ?, ;, :, ', ", |, {, }]
+SYMBOL	 [!, @, #, $, %, ^, &, *, (, ), -, _, =, +, ,, ., /, ?, ;, :, ', ", |, {, }, <, >, "\", `, ~]
    /* some common rules */
 
 %%
@@ -61,15 +61,15 @@ SYMBOL	 [!, @, #, $, %, ^, &, *, (, ), -, _, =, +, ,, ., /, ?, ;, :, ', ", |, {,
 "]"             {currPos += yyleng; return R_SQUARE_BRACKET;}
 ":="            {currPos += yyleng; return ASSIGN;}
 "="             {currPos += yyleng; return EQ_SIGN;}
-{DIGIT}+        {currPos += yyleng; return NUMBER;}
+{DIGIT}+        {currPos += yyleng; yylval.ival = atoi(yytext); return NUMBER;}
 
 ({DIGIT}+({ALPHA}|"_")+({DIGIT}|{ALPHA}|"_")*)	{printf("Error at line %d, column %d: identifier \"%s\" must begin with a letter\n", currLine, currPos, yytext); exit(0);}
 
 ("_"({DIGIT}|{ALPHA}|"_")*)	{printf("Error at line %d, column %d: identifier \"%s\" must begin with a letter\n", currLine, currPos, yytext); exit(0);}
 (({DIGIT}|{ALPHA})+"_")	{printf("Error at line %d, column %d: identifier \"%s\" cannot end with an underscore\n", currLine, currPos, yytext); exit(0);}
 
-({ALPHA}({ALPHA}|{DIGIT}|"_")*({ALPHA}|{DIGIT})*)	{currPos += yyleng; return IDENT;}
-("##"({ALPHA}|{DIGIT}|{SYMBOL})*"\n")	{currLine++; currPos = 0;}
+({ALPHA}({ALPHA}|{DIGIT}|"_")*({ALPHA}|{DIGIT})*)	{currPos += yyleng; yylval.str = yytext; return IDENT;}
+("##"({ALPHA}|{DIGIT}|{SYMBOL}|"["|"]")*"\n")	{currLine++; currPos = 0;}
 
 [ \t]+         {/* ignore spaces */ currPos += yyleng;}
 "\n"           {currLine++; currPos = 0;}

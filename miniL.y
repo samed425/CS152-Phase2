@@ -10,14 +10,27 @@ FILE * yyin;
 
 %union{
   /* put your types here */
-	char* str
+	char* str;
+	int ival;
 }
 
 %error-verbose
 %locations
 %start prog_start
-%token FUNCTION BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY ENUM OF IF THEN ENDIF ELSE FOR WHILE DO BEGINLOOP ENDLOOP CONTINUE READ WRITE AND OR NOT TRUE FALSE RETURN SUB ADD MULT DIV MOD EQ NEQ LT GT LTE GTE IDENT NUMBER SEMICOLON COLON COMMA L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET ASSIGN EQ_SIGN
+%token FUNCTION BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY ENUM OF IF THEN ENDIF ELSE FOR WHILE DO BEGINLOOP ENDLOOP CONTINUE READ WRITE AND OR NOT TRUE FALSE RETURN SUB ADD MULT DIV MOD EQ NEQ LT GT LTE GTE SEMICOLON COLON COMMA L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET ASSIGN EQ_SIGN
+%token <str> IDENT
+%type <str> identifier
+%token <ival> NUMBER
+%type <ival> number
+%left L_PAREN R_PAREN
+%left L_SQUARE_BRACKET R_SQUARE_BRACKET
+%left MULT DIV MOD
 %left ADD SUB
+%left LT LTE GT GTE EQ NEQ
+%right NOT
+%left AND
+%left OR
+%right ASSIGN
 /* %start program */
 
 %% 
@@ -31,16 +44,16 @@ program:
 	;
 
 function:
-	FUNCTION IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY {printf("function -> IDENT SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY\n");}
+	FUNCTION identifier SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY {printf("function -> identifier SEMICOLON BEGIN_PARAMS declarations END_PARAMS BEGIN_LOCALS declarations END_LOCALS BEGIN_BODY statements END_BODY\n");}
 	;
 
 declaration:
 	identifiers COLON INTEGER {printf("declaration -> identifiers COLON INTEGER\n");}
 |	identifiers COLON ENUM L_PAREN identifiers R_PAREN {printf("declaration -> identifiers COLON ENUM L_PAREN identifiers R_PAREN\n");}
-|	identifiers COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER {printf("identifiers -> COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");}
+|	identifiers COLON ARRAY L_SQUARE_BRACKET number R_SQUARE_BRACKET OF INTEGER {printf("declaration -> identifiers COLON ARRAY L_SQUARE_BRACKET number R_SQUARE_BRACKET OF INTEGER\n");}
 |	identifiers INTEGER {yyerror("Invalid declaration");}
 |       identifiers ENUM L_PAREN identifiers R_PAREN {yyerror("Invalid declaration");}
-|	identifiers ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER {yyerror("Invalid declaration");}
+|	identifiers ARRAY L_SQUARE_BRACKET number R_SQUARE_BRACKET OF INTEGER {yyerror("Invalid declaration");}
 	;
 
 statement:
@@ -97,25 +110,25 @@ mult-expr:
 	;
  
 term:
-	IDENT L_PAREN expressions R_PAREN {printf("term -> IDENT L_PAREN expressions R_PAREN\n");}
+	identifier L_PAREN expressions R_PAREN {printf("term -> identifier L_PAREN expressions R_PAREN\n");}
 |	terms {printf("term -> terms\n");}
 	;
 
 terms:
 	SUB terms {printf("terms -> SUB terms\n");}
-|	vars {printf("terms -> vars\n");}
-|	NUMBER {printf("terms -> NUMBER\n");}
+|	var {printf("terms -> vars\n");}
+|	number {printf("terms -> number\n");}
 |	L_PAREN expression R_PAREN {printf("terms -> L_PAREN expression R_PAREN\n");}
 	;
 
 var:
-	IDENT {printf("var -> IDENT\n");}
-|	IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET {printf("var -> IDENT L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");}
+	identifier {printf("var -> identifier\n");}
+|	identifier L_SQUARE_BRACKET expression R_SQUARE_BRACKET {printf("var -> identifier L_SQUARE_BRACKET expression R_SQUARE_BRACKET\n");}
 	;
 
 expressions:
 	{printf("expressions -> epsilon\n");}
-|	expression expressions2 {printf("expressions -> expression expressions2\n");}
+|	expression expressions2{printf("expressions -> expression expressions2");}
 	;
 
 expressions2:
@@ -128,16 +141,16 @@ elses:
 |	ELSE statements {printf("elses -> ELSE statements\n");}
 	;
 
+
 vars:
 	var {printf("vars -> var\n");}
 |	var COMMA vars {printf("vars -> var COMMA vars\n");}
-|       var vars {yyerror("Expected comma");}
 	;
 
 identifiers:
-	IDENT {printf("identifiers -> IDENT\n");}
-|	IDENT COMMA identifiers {printf("identifiers -> IDENT COMMA identifiers\n");}
-|       IDENT identifiers {yyerror("Expected comma");}
+	identifier {printf("identifiers -> identifier\n");}
+|	identifier COMMA identifiers {printf("identifiers -> identifier COMMA identifiers\n");}
+|       identifier identifiers {yyerror("Expected comma");}
 	;
 
 declarations:
@@ -149,8 +162,13 @@ declarations:
 statements:
 	statement SEMICOLON {printf("statements -> statement SEMICOLON\n");}
 |	statement SEMICOLON statements {printf("statements -> statement SEMICOLON statements\n");}
-|	statement {yyerror("Expected Semicolon");}
-|	statement statements {yyerror("Expected semicolon");}
+	;
+number:
+	NUMBER {printf("number -> NUMBER %i\n", $1);$$ = $1;}
+ 	;
+
+identifier:
+	IDENT {printf("identifier -> IDENT %s\n", $1); $$ = $1;}
 	;
 
   /* write your rules here */
