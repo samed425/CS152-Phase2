@@ -16,7 +16,7 @@ FILE * yyin;
 %error-verbose
 %locations
 %start prog_start
-%token FUNCTION BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY ENUM OF IF THEN ENDIF ELSE FOR WHILE DO BEGINLOOP ENDLOOP CONTINUE READ WRITE AND OR NOT TRUE FALSE RETURN SUB ADD MULT DIV MOD EQ NEQ LT GT LTE GTE IDENT NUMBER SEMICOLON COLON COMMA L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET ASSIGN
+%token FUNCTION BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY ENUM OF IF THEN ENDIF ELSE FOR WHILE DO BEGINLOOP ENDLOOP CONTINUE READ WRITE AND OR NOT TRUE FALSE RETURN SUB ADD MULT DIV MOD EQ NEQ LT GT LTE GTE IDENT NUMBER SEMICOLON COLON COMMA L_PAREN R_PAREN L_SQUARE_BRACKET R_SQUARE_BRACKET ASSIGN EQ_SIGN
 %left ADD SUB
 /* %start program */
 
@@ -38,6 +38,9 @@ declaration:
 	identifiers COLON INTEGER {printf("declaration -> identifiers COLON INTEGER\n");}
 |	identifiers COLON ENUM L_PAREN identifiers R_PAREN {printf("declaration -> identifiers COLON ENUM L_PAREN identifiers R_PAREN\n");}
 |	identifiers COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER {printf("identifiers -> COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER\n");}
+|	identifiers INTEGER {yyerror("Invalid declaration");}
+|       identifiers ENUM L_PAREN identifiers R_PAREN {yyerror("Invalid declaration");}
+|	identifiers ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER {yyerror("Invalid declaration");}
 	;
 
 statement:
@@ -49,6 +52,7 @@ statement:
 |	WRITE vars {printf("statement -> WRITE vars\n");}
 |	CONTINUE {printf("statement -> CONTINUE\n");}
 |	RETURN expression {printf("statement -> RETURN expression\n");}
+|	var EQ_SIGN expression {yyerror(":= expected");}
 	;
 
 bool-expr:
@@ -76,6 +80,7 @@ comp:
 |	GT {printf("comp -> GT\n");}
 |	LTE {printf("comp -> LTE\n");}
 |	GTE {printf("comp -> GTE\n");}
+|	EQ_SIGN{yyerror("Invalid comparator");}
 	;
 
 expression:
@@ -126,21 +131,26 @@ elses:
 vars:
 	var {printf("vars -> var\n");}
 |	var COMMA vars {printf("vars -> var COMMA vars\n");}
+|       var vars {yyerror("Expected comma");}
 	;
 
 identifiers:
 	IDENT {printf("identifiers -> IDENT\n");}
 |	IDENT COMMA identifiers {printf("identifiers -> IDENT COMMA identifiers\n");}
+|       IDENT identifiers {yyerror("Expected comma");}
 	;
 
 declarations:
 	{printf("declarations -> epsilon\n");}
 |	declaration SEMICOLON declarations {printf("declarations -> declaration SEMICOLON declarations\n");}
+|	declaration declarations {yyerror("Expected semicolon");}
 	;
 
 statements:
 	statement SEMICOLON {printf("statements -> statement SEMICOLON\n");}
 |	statement SEMICOLON statements {printf("statements -> statement SEMICOLON statements\n");}
+|	statement {yyerror("Expected Semicolon");}
+|	statement statements {yyerror("Expected semicolon");}
 	;
 
   /* write your rules here */
@@ -153,5 +163,5 @@ int main(int argc, char **argv) {
 }
 
 void yyerror(const char *msg) {
-     printf("error"); 
+     printf("*****Syntax error at  line %d, position %d: %s\n", currLine, currPos, msg); 
 }

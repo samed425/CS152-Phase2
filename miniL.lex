@@ -60,6 +60,7 @@ SYMBOL	 [!, @, #, $, %, ^, &, *, (, ), -, _, =, +, ,, ., /, ?, ;, :, ', ", |, {,
 "["             {currPos += yyleng; return L_SQUARE_BRACKET;}
 "]"             {currPos += yyleng; return R_SQUARE_BRACKET;}
 ":="            {currPos += yyleng; return ASSIGN;}
+"="             {currPos += yyleng; return EQ_SIGN;}
 {DIGIT}+        {currPos += yyleng; return NUMBER;}
 
 ({DIGIT}+({ALPHA}|"_")+({DIGIT}|{ALPHA}|"_")*)	{printf("Error at line %d, column %d: identifier \"%s\" must begin with a letter\n", currLine, currPos, yytext); exit(0);}
