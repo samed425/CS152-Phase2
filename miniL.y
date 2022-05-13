@@ -163,5 +163,5 @@ int main(int argc, char **argv) {
 }
 
 void yyerror(const char *msg) {
-     printf("*****Syntax error at  line %d, position %d: %s\n", currLine, currPos, msg); 
+     printf("**Syntax error at  line %d, position %d: %s\n", currLine, currPos, msg); 
 }
